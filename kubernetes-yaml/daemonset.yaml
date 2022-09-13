@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: djangotracingapp
+  namespace: default # Name Space
+  labels:
+    app: djangotracingapp
+spec:
+  selector: # Selector
+    matchLabels: 
+      app: djangotracingapp
+  minReadySeconds: 30
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template: # Pod Template
+    metadata:
+      labels:
+        app: djangotracingapp
+    spec:
+      tolerations:
+      # Master to also work as worker 
+      # these tolerations are to have the daemonset runnable on control plane nodes
+      # remove them if your control plane nodes should not run pods
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      
+      containers: # Container Details
+      - name: djangotracingapp
+        image: andrewsusanto/djangotracingapp:latest
+        env:
+        - name: DEBUG
+          value: "False"
+        - name: DATABASE_POSTGRE
+          value: "True"
+        - name: DATABASE_NAME
+          value: ""
+        - name: DATABASE_USER
+          value: ""
+        - name: DATABASE_PASSWORD
+          value: ""
+        - name: DATABASE_HOST
+          value: ""
+        - name: DATABASE_PORT
+          value: ""
+        - name: DJANGO_ALLOWED_HOSTS
+          value: "" 
+        - name: DJANGO_CSRF_TRUSTED_ORIGIN
+          value: ""
+        ports:
+        - containerPort: 80
+      terminationGracePeriodSeconds: 30
+      imagePullSecrets:
+      - name: xxx
